@@ -35,7 +35,7 @@ app.get('/download-update', async (req, res) => {
   try {
     // GitHub API üzerinden ZIP indirme
     const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/zipball/${BRANCH}`;
-    
+    console.log("request geldi")
     const response = await axios({
       method: 'get',
       url: url,
