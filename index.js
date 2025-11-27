@@ -6,9 +6,8 @@ const app = express();
 const GITHUB_USER = "fozenistaken"; 
 const GITHUB_REPO = "nxpbot"; // Örn: nexup-bot-v14
 const BRANCH = "main"; // Genelde main veya master olur
-
-// --- GİZLİ TOKEN (Dokunma, Secrets'tan çeker) ---
-const TOKEN = process.env.GITHUB_TOKEN;
+const CLIENT_SECRET_KEY = process.env.CLIENT_SECRET_KEY;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 // 1. Versiyon Kontrol Rotası
 app.get('/check-version', async (req, res) => {
@@ -31,20 +30,35 @@ app.get('/check-version', async (req, res) => {
 });
 
 // 2. İndirme Rotası
-app.get('/download-update', async (req, res) => {
+app.get("/download-update", async (req, res) => {
+  // 1. HEADER KONTROLÜ
+  // Launcher'ın gönderdiği gizli anahtarı al
+  const clientKey = req.headers['x-client-key']; 
+
+  // Anahtar eşleşiyor mu kontrol et
+  if (!clientKey || clientKey !== CLIENT_SECRET_KEY) {
+    console.warn("Unauthorized access attempt on download.");
+    return res.status(403).send("Erişim Reddedildi: Geçersiz veya Eksik Anahtar.");
+  }
+  
+  // 2. Eğer anahtar doğruysa, indirme işlemini başlat
   try {
-    // GitHub API üzerinden ZIP indirme
     const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/zipball/${BRANCH}`;
-    console.log("request geldi")
+    
     const response = await axios({
       method: 'get',
       url: url,
       responseType: 'stream',
-      headers: { 
-        'Authorization': `token ${TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
+      headers: { Authorization: `token ${GITHUB_TOKEN}` }
     });
+
+    res.setHeader('Content-Disposition', 'attachment; filename=update.zip');
+    response.data.pipe(res);
+    
+  } catch (error) {
+    res.status(500).send("İndirme başarısız.");
+  }
+});
 
     // Dosyayı Launcher'a gönder
     res.setHeader('Content-Disposition', 'attachment; filename=update.zip');
