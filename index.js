@@ -56,7 +56,7 @@ app.get('/download-update', checkDownloadKey, async (req, res) => {
   // ... (Güvenlik kontrolü) ...
   try {
     const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/zipball/${BRANCH}`;
-    
+    console.log("talebi aldım")
     const response = await axios({
       method: 'get',
       url: url,
