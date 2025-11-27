@@ -7,7 +7,7 @@ const app = express();
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
 const CLIENT_SECRET_KEY = process.env.CLIENT_SECRET_KEY;
 const GITHUB_USER = "fozenistaken"; // Kendi GitHub kullanıcı adın
-const GITHUB_REPO = "npxbot"; // Kendi GitHub depo adın
+const GITHUB_REPO = "nxpbot"; // Kendi GitHub depo adın
 const BRANCH = "main"; // Ana dal
 
 // --- GÜVENLİK KONTROLÜ (MIDDLEWARE) ---
@@ -53,28 +53,38 @@ app.get('/check-version', async (req, res) => {
 // 2. İNDİRME ROTASI (KONTROLLÜ)
 // Launcher'ın asıl zip dosyasını indirdiği rota. (Token + Gizli Anahtar gerekir)
 app.get('/download-update', checkDownloadKey, async (req, res) => {
+  // ... (Güvenlik kontrolü) ...
   try {
-    // GitHub'dan ZIP dosyasını çekmek için API adresi
     const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/zipball/${BRANCH}`;
     
     const response = await axios({
       method: 'get',
       url: url,
       responseType: 'stream',
+      // GitHub'a Token'ı gönderiyoruz
       headers: { 
-        // Token'ı başlıkta GitHub'a gönder
         'Authorization': `token ${GITHUB_TOKEN}`,
         'Accept': 'application/vnd.github.v3+json'
       }
     });
 
-    // Dosyayı Launcher'a gönder (Stream ile, böylece büyük dosyalarda belleği şişirmez)
+    // Axios varsayılan olarak 4xx veya 5xx statü kodlarında hata fırlatır.
+    // Başarılıysa Launcher'a yollarız.
     res.setHeader('Content-Disposition', 'attachment; filename=update.zip');
     response.data.pipe(res);
     
   } catch (error) {
-    console.error("İndirme hatası:", error.message);
-    res.status(500).send("İndirme başarısız.");
+    // Hata durumunda hatanın sebebini konsola ve kullanıcıya gönderelim.
+    const statusCode = error.response ? error.response.status : 500;
+    console.error(`İndirme başarısız oldu. GitHub Status: ${statusCode}`);
+    
+    if (statusCode === 404) {
+        return res.status(404).send("Dosya veya GitHub deposu bulunamadı.");
+    }
+    if (statusCode === 401 || statusCode === 403) {
+        return res.status(403).send("ERİŞİM YETKİSİ YOK. GITHUB_TOKEN'I KONTROL EDİN.");
+    }
+    res.status(500).send("İndirme sırasında sunucu hatası oluştu.");
   }
 });
 
