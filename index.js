@@ -3,8 +3,8 @@ const axios = require('axios');
 const app = express();
 
 // --- AYARLAR (BURAYI DÜZENLE) ---
-const GITHUB_USER = "GITHUB_KULLANICI_ADIN"; 
-const GITHUB_REPO = "DEPO_ADIN"; // Örn: nexup-bot-v14
+const GITHUB_USER = "fozenistaken"; 
+const GITHUB_REPO = "nxpbot"; // Örn: nexup-bot-v14
 const BRANCH = "main"; // Genelde main veya master olur
 
 // --- GİZLİ TOKEN (Dokunma, Secrets'tan çeker) ---
