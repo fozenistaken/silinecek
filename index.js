@@ -77,11 +77,13 @@ app.get('/download-update', checkDownloadKey, async (req, res) => {
     // Hata durumunda hatanın sebebini konsola ve kullanıcıya gönderelim.
     const statusCode = error.response ? error.response.status : 500;
     console.error(`İndirme başarısız oldu. GitHub Status: ${statusCode}`);
-    
+        console.log("talebi aldım hata")
     if (statusCode === 404) {
+        console.log("talebi aldım hata2")
         return res.status(404).send("Dosya veya GitHub deposu bulunamadı.");
     }
     if (statusCode === 401 || statusCode === 403) {
+        console.log("talebi aldım hata3")
         return res.status(403).send("ERİŞİM YETKİSİ YOK. GITHUB_TOKEN'I KONTROL EDİN.");
     }
     res.status(500).send("İndirme sırasında sunucu hatası oluştu.");
