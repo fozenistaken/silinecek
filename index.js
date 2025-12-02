@@ -5,7 +5,7 @@ const app = express();
 // --- AYARLAR ---
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
 const CLIENT_SECRET_KEY = process.env.CLIENT_SECRET_KEY;
-const HWID_LIST_URL = process.env.HWID_LIST_URL; // GitHub Raw URL (allowlist.txt)
+const HWID_LIST_URL = process.env.HWID_LIST; // GitHub Raw URL (allowlist.txt)
 
 const GITHUB_USER = "fozenistaken"; 
 const GITHUB_REPO = "nxpbot"; 
