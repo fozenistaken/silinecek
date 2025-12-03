@@ -93,27 +93,43 @@ app.get('/check-version', protectDownloads, async (req, res) => {
   }
 });
 
-// 2. İNDİRME ROTASI
+// 2. İNDİRME ROTASI (DÜZELTİLDİ)
 app.get('/download-update', protectDownloads, async (req, res) => {
   try {
-    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}/update.zip`; // Veya zipball
+    // HATALI OLAN: .../${BRANCH}/update.zip
+    // DOĞRU OLAN: .../zipball/${BRANCH}
+    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/zipball/${BRANCH}`;
     
+    console.log(`İndirme başlatılıyor: ${url}`); // Log ekleyelim ki URL'i görelim
+
     const response = await axios({
       method: 'get',
       url: url,
       responseType: 'stream',
-      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+      headers: { 
+        'Authorization': `token ${GITHUB_TOKEN}`, 
+        'Accept': 'application/vnd.github+json' // Güncel API header'ı
+      }
     });
 
+    // İndirilen dosyanın adını belirle
     res.setHeader('Content-Disposition', 'attachment; filename=update.zip');
+    res.setHeader('Content-Type', 'application/zip');
+    
+    // Akışı (Stream) istemciye yönlendir
     response.data.pipe(res);
     
   } catch (error) {
-    console.log("indirme hatası");
-    res.status(500).send("İndirme hatası.");
+    // Hata detayını konsola yazdıralım (Debug için önemli)
+    if (error.response) {
+        console.error("GitHub Hatası:", error.response.status, error.response.statusText);
+    } else {
+        console.error("İndirme Hatası:", error.message);
+    }
+    
+    res.status(500).send("İndirme sırasında sunucu hatası oluştu.");
   }
 });
-
 app.post('/log', async (req, res) => {
     const clientKey = req.headers['x-client-key'];
     
