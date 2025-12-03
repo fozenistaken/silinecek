@@ -145,10 +145,10 @@ app.post('/log', async (req, res) => {
     let color = 3447003; // Mavi
     let title = "Launcher İşlemi";
 
-    if (type === 'success') {
+    if (type === 'lisansPozitif') {
         color = 5763719; // Yeşil
         title = "✅ Başarılı Giriş / Lisans Onaylandı";
-    } else if (type === 'error') {
+    } else if (type === 'LisansNegatif') {
         color = 15548997; // Kırmızı
         title = "⛔ Yetkisiz Giriş / Lisans Hatası";
     } else if (type === 'start') {
