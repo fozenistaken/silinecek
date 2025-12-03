@@ -5,6 +5,7 @@ const app = express();
 // --- AYARLAR (RENDER ENV'DEN ÇEKİLİR) ---
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; 
 const CLIENT_SECRET_KEY = process.env.CLIENT_SECRET_KEY;
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 
 // 🟢 DEĞİŞİKLİK BURADA: URL YERİNE DİREKT LİSTE
 // Render'da 'ALLOWED_HWIDS' adında bir değişken oluşturup ID'leri virgül ile ayırarak yazmalısın.
@@ -110,6 +111,65 @@ app.get('/download-update', protectDownloads, async (req, res) => {
   } catch (error) {
     res.status(500).send("İndirme hatası.");
   }
+});
+
+app.post('/log', async (req, res) => {
+    const clientKey = req.headers['x-client-key'];
+    
+    // 1. Güvenlik Kontrolü (Sadece senin launcher'ın log atabilsin)
+    if (!clientKey || clientKey !== CLIENT_SECRET_KEY) {
+        return res.status(403).send("Yetkisiz Erişim.");
+    }
+
+    // 2. Launcher'dan gelen verileri al
+    const { username, hostname, platform, hwid, type, reason, ip } = req.body;
+
+    // 3. Embed Rengi ve Başlığını Sunucuda Belirle
+    let color = 3447003; // Mavi
+    let title = "Launcher İşlemi";
+
+    if (type === 'success') {
+        color = 5763719; // Yeşil
+        title = "✅ Başarılı Giriş / Lisans Onaylandı";
+    } else if (type === 'error') {
+        color = 15548997; // Kırmızı
+        title = "⛔ Yetkisiz Giriş / Lisans Hatası";
+    } else if (type === 'start') {
+        color = 16776960; // Sarı
+        title = "🚀 Launcher Başlatıldı";
+    }
+
+    // 4. Discord'a Gönderilecek Veriyi Hazırla
+    const embedData = {
+        username: "Nexup Security",
+        avatar_url: "https://i.imgur.com/AfFp7pu.png",
+        embeds: [{
+            title: title,
+            color: color,
+            fields: [
+                { name: "👤 Kullanıcı", value: `\`${username}\` @ \`${hostname}\``, inline: true },
+                { name: "💻 İşletim Sistemi", value: `\`${platform}\``, inline: true },
+                { name: "🌐 IP Adresi", value: `\`${ip || req.ip}\``, inline: false },
+                { name: "🔑 HWID", value: `\`${hwid}\``, inline: false },
+                { name: "📝 Durum/Mesaj", value: reason ? `\`${reason}\`` : "İşlem Tamamlandı", inline: false }
+            ],
+            footer: { text: "Nexup Proxy Logger System" },
+            timestamp: new Date().toISOString()
+        }]
+    };
+
+    try {
+        if (DISCORD_WEBHOOK_URL) {
+            await axios.post(DISCORD_WEBHOOK_URL, embedData);
+            return res.json({ success: true });
+        } else {
+            console.warn("Webhook URL tanımlanmamış!");
+            return res.status(500).json({ success: false, message: "Webhook ayarlı değil." });
+        }
+    } catch (error) {
+        console.error("Discord Log Hatası:", error.message);
+        return res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 const port = process.env.PORT || 3000;
