@@ -109,6 +109,7 @@ app.get('/download-update', protectDownloads, async (req, res) => {
     response.data.pipe(res);
     
   } catch (error) {
+    console.log("indirme hatası");
     res.status(500).send("İndirme hatası.");
   }
 });
@@ -164,10 +165,12 @@ app.post('/log', async (req, res) => {
             return res.json({ success: true });
         } else {
             console.warn("Webhook URL tanımlanmamış!");
+            console.log("webhook hata");
             return res.status(500).json({ success: false, message: "Webhook ayarlı değil." });
         }
     } catch (error) {
         console.error("Discord Log Hatası:", error.message);
+        console.log("webhook hata 2");
         return res.status(500).json({ success: false, error: error.message });
     }
 });
